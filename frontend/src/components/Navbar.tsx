@@ -19,7 +19,7 @@ const Navbar: React.FC = () => {
     <nav className={`navbar ${isWelcomePage ? 'navbar-transparent' : ''}`}>
       <div className="nav-container">
         <Link to="/" className="nav-logo">
-          <span className="logo-icon">💼</span>
+          <img src="/logo.svg" alt="Job Board AI" className="logo-image" style={{ marginRight: '0.5rem' }} />
           <span className="logo-text">Job Board AI</span>
         </Link>
 

@@ -7,8 +7,8 @@ export const authService = {
   login: async (credentials: LoginDTO) => {
     const response = await api.post('/auth/login', credentials);
     if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      sessionStorage.setItem('token', response.data.token);
+      sessionStorage.setItem('user', JSON.stringify(response.data.user));
     }
     return response.data;
   },
@@ -17,8 +17,8 @@ export const authService = {
   register: async (userData: RegisterDTO) => {
     const response = await api.post('/auth/register', userData);
     if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      sessionStorage.setItem('token', response.data.token);
+      sessionStorage.setItem('user', JSON.stringify(response.data.user));
     }
     return response.data;
   },
@@ -26,30 +26,30 @@ export const authService = {
   // Get current user
   getCurrentUser: async (): Promise<User> => {
     const response = await api.get('/auth/me');
-    localStorage.setItem('user', JSON.stringify(response.data));
+    sessionStorage.setItem('user', JSON.stringify(response.data));
     return response.data;
   },
 
   // Logout
   logout: () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
   },
 
   // Get token from localStorage
   getToken: (): string | null => {
-    return localStorage.getItem('token');
+    return sessionStorage.getItem('token');
   },
 
   // Get user from localStorage
   getStoredUser: (): User | null => {
-    const user = localStorage.getItem('user');
+    const user = sessionStorage.getItem('user');
     return user ? JSON.parse(user) : null;
   },
 
   // Check if user is authenticated
   isAuthenticated: (): boolean => {
-    return !!localStorage.getItem('token');
+    return !!sessionStorage.getItem('token');
   },
 
   // Check if user is HR

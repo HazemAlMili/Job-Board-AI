@@ -34,6 +34,11 @@ export interface Application {
   status: 'pending' | 'evaluating' | 'rejected' | 'under_review' | 'accepted';
   created_at: string;
   evaluated_at: string | null;
+  job?: {
+    title: string;
+    location: string;
+    company?: string;
+  };
 }
 
 export interface ApplicationWithJobDetails extends Application {

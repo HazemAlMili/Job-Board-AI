@@ -12,19 +12,24 @@ const MyApplications: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadApplications();
-  }, []);
+    const fetchApps = async (silent = false) => {
+      try {
+        if (!silent) setLoading(true);
+        const data = await applicationsService.getMyApplications();
+        setApplications(data);
+        setError('');
+      } catch (err: any) {
+        if (!silent) setError('Failed to load applications.');
+      } finally {
+        if (!silent) setLoading(false);
+      }
+    };
 
-  const loadApplications = async () => {
-    try {
-      const data = await applicationsService.getMyApplications();
-      setApplications(data);
-    } catch (err: any) {
-      setError('Failed to load applications.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchApps();
+    // Poll every 5 seconds for status updates (AI evaluation)
+    const interval = setInterval(() => fetchApps(true), 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   if (loading) return <LoadingSpinner fullPage message="Loading applications..." />;
 
@@ -52,7 +57,16 @@ const MyApplications: React.FC = () => {
             <div key={application.id} className="application-card">
               <div className="application-header">
                 <div className="application-info">
-                  <h3>{application.full_name}</h3>
+                  {application.job ? (
+                    <>
+                      <h3>{application.job.title}</h3>
+                      <p className="application-subtitle" style={{ color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+                        {application.job.company ? `${application.job.company} • ` : ''}{application.job.location}
+                      </p>
+                    </>
+                  ) : (
+                    <h3>{application.full_name}</h3>
+                  )}
                   <p className="application-date">
                     Applied on {new Date(application.created_at).toLocaleDateString()}
                   </p>

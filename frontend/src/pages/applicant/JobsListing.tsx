@@ -36,42 +36,64 @@ const JobsListing: React.FC = () => {
   if (loading) return <LoadingSpinner fullPage message="Loading jobs..." />;
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <h1>Browse Jobs</h1>
-        <p>Find your dream job with AI-powered matching</p>
-      </div>
-
-      <div className="search-bar">
-        <span className="search-icon">🔍</span>
-        <input
-          type="text"
-          placeholder="Search jobs by title, location, or description..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="search-input"
-        />
-      </div>
-
-      {error && <div className="alert alert-error">{error}</div>}
-
-      {filteredJobs.length === 0 ? (
-        <div className="empty-state">
-          <span className="empty-icon">📭</span>
-          <h3>No jobs found</h3>
-          <p>Try adjusting your search criteria</p>
+    <div className="jobs-page">
+      <div className="jobs-hero">
+        <h1>Find Your <span className="text-gradient">Dream Job</span></h1>
+        <p>Discover opportunities matched to your skills with AI-powered analysis</p>
+        
+        <div className="search-container-large">
+          <span className="search-icon-large">🔍</span>
+          <input
+            type="text"
+            placeholder="Search jobs by title, location, or description..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input-large"
+          />
         </div>
-      ) : (
-        <div className="jobs-grid">
-          {filteredJobs.map((job) => (
-            <JobCard
-              key={job.id}
-              job={job}
-              onClick={() => navigate(`/jobs/${job.id}`)}
-            />
+        
+        <div className="filter-tags">
+          {['Remote', 'Full Time', 'Engineering', 'Design', 'Marketing'].map(tag => (
+            <button 
+              key={tag} 
+              className={`filter-tag ${searchTerm.toLowerCase().includes(tag.toLowerCase()) ? 'active' : ''}`}
+              onClick={() => setSearchTerm(prev => prev.toLowerCase().includes(tag.toLowerCase()) ? '' : tag)}
+            >
+              {tag}
+            </button>
           ))}
         </div>
-      )}
+      </div>
+
+      <div className="page-container">
+        {error && <div className="alert alert-error">{error}</div>}
+
+        {filteredJobs.length === 0 ? (
+          <div className="empty-state">
+            <span className="empty-icon">📭</span>
+            <h3>No jobs found</h3>
+            <p>Try adjusting your search criteria</p>
+            <button onClick={() => setSearchTerm('')} className="btn-link">
+              Clear Search
+            </button>
+          </div>
+        ) : (
+          <>
+            <div style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
+              Showing {filteredJobs.length} {filteredJobs.length === 1 ? 'job' : 'jobs'}
+            </div>
+            <div className="jobs-grid">
+              {filteredJobs.map((job) => (
+                <JobCard
+                  key={job.id}
+                  job={job}
+                  onClick={() => navigate(`/jobs/${job.id}`)}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 };
