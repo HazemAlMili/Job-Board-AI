@@ -1,7 +1,7 @@
 // Type definitions matching backend models
 
 export interface User {
-  id: number;
+  id: string;
   email: string;
   full_name: string;
   role: 'applicant' | 'hr';
@@ -16,14 +16,14 @@ export interface Job {
   location: string;
   salary_range: string;
   status: 'active' | 'closed';
-  created_by: number;
+  created_by: string;
   created_at: string;
 }
 
 export interface Application {
   id: number;
   job_id: number;
-  applicant_id: number | null;
+  applicant_id: string | null;
   full_name: string;
   email: string;
   phone: string;

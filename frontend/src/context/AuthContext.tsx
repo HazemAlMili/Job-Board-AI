@@ -24,7 +24,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     // Check if user is already logged in
     const initAuth = async () => {
-      const token = authService.getToken();
+      const token = await authService.getToken();
       if (token) {
         try {
           const currentUser = await authService.getCurrentUser();

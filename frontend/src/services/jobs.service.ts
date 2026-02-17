@@ -1,45 +1,80 @@
-import api from './api';
+import { supabase } from '../lib/supabaseClient';
 import type { Job, CreateJobDTO, UpdateJobDTO } from '../types';
-
 
 export const jobsService = {
   // Get all active jobs (public)
   getActiveJobs: async (): Promise<Job[]> => {
-    const response = await api.get('/jobs');
-    return response.data.jobs;
+    const { data, error } = await supabase
+      .from('jobs')
+      .select('*')
+      .eq('status', 'active');
+      
+    if (error) throw error;
+    return data || [];
   },
-
 
   // Get all jobs (HR only)
   getAllJobs: async (): Promise<Job[]> => {
-    const response = await api.get('/jobs/all/list');
-    return response.data.jobs;
+    // In a real app we might paginate 'list'
+    const { data, error } = await supabase
+      .from('jobs')
+      .select('*');
+      
+    if (error) throw error;
+    return data || [];
   },
-
 
   // Get single job
   getJob: async (id: number): Promise<Job> => {
-    const response = await api.get(`/jobs/${id}`);
-    return response.data.job;
-  },
+    const { data, error } = await supabase
+      .from('jobs')
+      .select('*')
+      .eq('id', id)
+      .single();
 
+    if (error) throw error;
+    return data;
+  },
 
   // Create job (HR only)
   createJob: async (jobData: CreateJobDTO): Promise<Job> => {
-    const response = await api.post('/jobs', jobData);
-    return response.data.job;
-  },
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
 
+    const { data, error } = await supabase
+      .from('jobs')
+      .insert({
+        ...jobData,
+        created_by: user.id,
+        status: 'active'
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
 
   // Update job (HR only)
   updateJob: async (id: number, jobData: UpdateJobDTO): Promise<Job> => {
-    const response = await api.put(`/jobs/${id}`, jobData);
-    return response.data.job;
-  },
+    const { data, error } = await supabase
+      .from('jobs')
+      .update(jobData)
+      .eq('id', id)
+      .select()
+      .single();
 
+    if (error) throw error;
+    return data;
+  },
 
   // Delete job (HR only)
   deleteJob: async (id: number): Promise<void> => {
-    await api.delete(`/jobs/${id}`);
+    const { error } = await supabase
+      .from('jobs')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
   },
 };
