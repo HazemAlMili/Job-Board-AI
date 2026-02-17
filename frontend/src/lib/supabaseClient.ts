@@ -3,17 +3,17 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Debug environment variables (safe check)
-console.log('Supabase URL present:', !!supabaseUrl);
-console.log('Supabase Anon Key present:', !!supabaseAnonKey);
+// Debug log per instructions
+console.log("Supabase Client Init - Key exists:", !!supabaseAnonKey);
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('CRITICAL: Supabase environment variables are missing! Requests will fail with "No apikey" errors.');
+  console.error(
+    "Supabase configuration error: VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY is undefined. " +
+    "Check your .env file or Vercel environment variables."
+  );
 }
 
 export const supabase = createClient(
-  supabaseUrl || 'https://missing-url.supabase.co', 
+  supabaseUrl || 'https://missing-url.supabase.co',
   supabaseAnonKey || 'missing-key'
 );
-
-
