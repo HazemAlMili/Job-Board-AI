@@ -439,7 +439,7 @@ body {
   font-size: 1.125rem;
 }
 
-/* Cards */
+/* Cards Liquid Glass */
 .job-card,
 .application-card,
 .stat-card,
@@ -448,10 +448,14 @@ body {
 .form-card,
 .job-details-card,
 .application-details-card,
-.success-card {
-  background: rgba(30, 41, 59, 0.5);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border);
+.success-card,
+.profile-card,
+.detail-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   border-radius: var(--radius-xl);
   padding: 1.5rem;
   transition: var(--transition);

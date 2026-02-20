@@ -44,6 +44,13 @@ export const applicationsService = {
       console.error("Application record insertion failed:", error.message);
       throw error;
     }
+
+    // Trigger AI evaluation on the backend queue (fire-and-forget)
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+    fetch(`${API_URL}/api/queue/evaluate/${data.id}`, { method: 'POST' })
+      .then(() => console.log(`Application ${data.id} sent to AI evaluation queue`))
+      .catch((err) => console.warn('Could not trigger AI evaluation:', err));
+
     return data;
   },
 

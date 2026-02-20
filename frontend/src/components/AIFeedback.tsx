@@ -4,7 +4,7 @@ import { Sparkles, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import GlassCard from './ui/GlassCard';
 import { cn } from '../lib/utils';
 
-interface GeminiFeedbackProps {
+interface AIFeedbackProps {
   score: number | null;
   feedback: string;
   isLoading?: boolean;
@@ -30,7 +30,7 @@ const getScoreIcon = (score: number) => {
   return TrendingDown;
 };
 
-const GeminiFeedback: React.FC<GeminiFeedbackProps> = ({ score, feedback, isLoading = false }) => {
+const AIFeedback: React.FC<AIFeedbackProps> = ({ score, feedback, isLoading = false }) => {
   if (isLoading) {
     return (
       <GlassCard className="p-6 relative overflow-hidden" glow glowColor="violet">
@@ -132,4 +132,4 @@ const GeminiFeedback: React.FC<GeminiFeedbackProps> = ({ score, feedback, isLoad
   );
 };
 
-export default GeminiFeedback;
+export default AIFeedback;

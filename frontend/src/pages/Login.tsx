@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -7,8 +7,15 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, isAuthenticated, isHR, isLoading } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      navigate(isHR() ? '/hr/dashboard' : '/jobs', { replace: true });
+    }
+  }, [isAuthenticated, isLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,9 +23,9 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      await login(email, password);
-      // "when login make it to move me to welcome page first"
-      navigate('/');
+      const loggedInUser = await login(email, password);
+      // Navigate based on role
+      navigate(loggedInUser.role === 'hr' ? '/hr/dashboard' : '/jobs');
     } catch (err) {
       const error = err as { response?: { data?: { error?: string } } };
       setError(error.response?.data?.error || 'Login failed. Please check your credentials.');
@@ -26,6 +33,9 @@ const Login: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Don't render the form if already authenticated (redirect is in progress)
+  if (isAuthenticated) return null;
 
   return (
     <div className="auth-container">
@@ -74,12 +84,6 @@ const Login: React.FC = () => {
             Don't have an account?{' '}
             <Link to="/register" className="auth-link">Register here</Link>
           </p>
-        </div>
-
-        <div className="demo-credentials">
-          <p className="demo-title">Demo Credentials:</p>
-          <p><strong>HR:</strong> hr@jobboard.com / 12345678</p>
-          <p><strong>Applicant:</strong> john.doe@example.com / password123</p>
         </div>
       </div>
     </div>

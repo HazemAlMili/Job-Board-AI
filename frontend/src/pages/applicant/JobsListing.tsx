@@ -150,7 +150,7 @@ const JobsListing: React.FC = () => {
                 placeholder="Search jobs by title, location, or description..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 rounded-2xl bg-surface/50 backdrop-blur-glass border border-border text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary-violet focus:ring-2 focus:ring-primary-violet/20 transition-all"
+                className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 text-white placeholder:text-white/50 focus:outline-none focus:border-primary-violet focus:ring-2 focus:ring-primary-violet/20 transition-all shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]"
               />
             </div>
           </motion.div>
@@ -169,7 +169,7 @@ const JobsListing: React.FC = () => {
                 className={`px-4 py-2 rounded-xl font-medium transition-all ${
                   searchTerm.toLowerCase().includes(tag.toLowerCase())
                     ? 'bg-gradient-to-r from-primary-violet to-primary-cyan text-white shadow-glow'
-                    : 'bg-surface/50 backdrop-blur-glass border border-border text-text-secondary hover:border-primary-violet hover:text-text-primary'
+                    : 'bg-white/5 backdrop-blur-md border border-white/10 text-white/70 hover:border-white/20 hover:text-white hover:bg-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]'
                 }`}
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
@@ -202,7 +202,7 @@ const JobsListing: React.FC = () => {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
           >
-            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-surface/50 backdrop-blur-glass border border-border flex items-center justify-center">
+            <div className="w-24 h-24 mx-auto mb-6 rounded-full backdrop-blur-glass border border-border flex items-center justify-center">
               <Search className="w-12 h-12 text-text-muted" />
             </div>
             <h3 className="text-2xl font-bold text-text-primary mb-2">No jobs found</h3>

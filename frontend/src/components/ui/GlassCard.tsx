@@ -24,9 +24,9 @@ const GlassCard = React.forwardRef<HTMLDivElement, GlassCardProps>(
       <motion.div
         ref={ref}
         className={cn(
-          'relative rounded-2xl border border-border bg-surface backdrop-blur-glass',
+          'relative rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 to-transparent backdrop-blur-glass shadow-glass shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]',
           'transition-all duration-300 ease-smooth',
-          hover && 'hover:border-border-hover hover:bg-surface-hover',
+          hover && 'hover:border-white/20 hover:from-white/15 hover:to-white/5',
           glow && glowColors[glowColor],
           className
         )}

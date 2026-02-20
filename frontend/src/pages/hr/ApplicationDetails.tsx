@@ -4,7 +4,7 @@ import { hrService } from '../../services/hr.service';
 import type { ApplicationWithJobDetails, Application } from '../../types';
 import StatusBadge from '../../components/StatusBadge';
 import LoadingAI from '../../components/LoadingAI';
-import GeminiFeedback from '../../components/GeminiFeedback';
+import AIFeedback from '../../components/AIFeedback';
 
 const ApplicationDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -58,7 +58,6 @@ const ApplicationDetails: React.FC = () => {
     );
   }
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
   return (
     <div className="page-container">
@@ -136,7 +135,7 @@ const ApplicationDetails: React.FC = () => {
         </div>
 
         <div className="mb-6">
-          <GeminiFeedback
+          <AIFeedback
             score={application.ai_score}
             feedback={application.ai_feedback || 'No feedback available'}
             isLoading={false}
@@ -148,11 +147,11 @@ const ApplicationDetails: React.FC = () => {
           <div className="resume-download">
             <span className="file-icon">📄</span>
             <div className="file-details">
-              <p className="file-name">Resume.pdf</p>
+              <p className="file-name">Resume</p>
               <p className="file-info">Uploaded on {new Date(application.created_at).toLocaleDateString()}</p>
             </div>
-            <a 
-              href={`${API_URL}/${application.resume_path}`}
+            <a
+              href={application.resume_path}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-download"

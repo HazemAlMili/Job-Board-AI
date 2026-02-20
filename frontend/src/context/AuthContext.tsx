@@ -1,15 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { User } from '../types';
-
 import { authService } from '../services/auth.service';
+import { supabase } from '../lib/supabaseClient';
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<User>;
-  register: (full_name: string, email: string, password: string) => Promise<void>;
+  register: (full_name: string, email: string, password: string, role?: 'applicant' | 'hr') => Promise<void>;
   updateUser: (user: User) => void;
   logout: () => void;
   isHR: () => boolean;
@@ -22,32 +22,56 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already logged in
-    const initAuth = async () => {
-      const token = await authService.getToken();
-      if (token) {
-        try {
-          const currentUser = await authService.getCurrentUser();
-          setUser(currentUser);
-        } catch {
-          // Token invalid, clear it
-          authService.logout();
+    let mounted = true;
+
+    // onAuthStateChange handles EVERYTHING:
+    // - INITIAL_SESSION: restores session on page refresh
+    // - SIGNED_OUT: clears the user
+    // We do NOT call getCurrentUser() here to avoid double fetchUserRole during login.
+    // login() and register() set the user directly from their response.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (!mounted) return;
+        if (!session) {
+          setUser(null);
         }
+        // Always resolve loading on first event (INITIAL_SESSION)
+        setIsLoading(false);
       }
-      setIsLoading(false);
+    );
+
+    // For page refresh: if there's an existing session, fetch user with role
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user && mounted) {
+          const currentUser = await authService.getCurrentUser();
+          if (mounted) setUser(currentUser);
+        }
+      } catch {
+        // no valid session
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
     };
 
     initAuth();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
+    // login() fetches the role itself and sets user directly — no double fetch
     const response = await authService.login({ email, password });
     setUser(response.user);
     return response.user;
   };
 
-  const register = async (full_name: string, email: string, password: string) => {
-    const response = await authService.register({ email, password, full_name });
+  const register = async (full_name: string, email: string, password: string, role?: 'applicant' | 'hr') => {
+    const response = await authService.register({ email, password, full_name, role });
     setUser(response.user);
   };
 

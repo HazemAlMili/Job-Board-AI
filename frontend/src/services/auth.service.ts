@@ -1,12 +1,39 @@
 import { supabase } from '../lib/supabaseClient';
 import type { User, LoginDTO, RegisterDTO } from '../types';
 
-const mapSupabaseUser = (user: any): User => {
+/**
+ * Role resolution priority:
+ * 1. profiles table (most authoritative — set by DB trigger or admin)
+ * 2. user_metadata.role (set during signUp — works before profiles table exists)
+ * 3. 'applicant' (safe default)
+ */
+const fetchUserRole = async (userId: string, metadataRole?: string): Promise<'applicant' | 'hr'> => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single();
+
+    if (!error && data?.role) {
+      return data.role as 'applicant' | 'hr';
+    }
+  } catch (_) {
+    // profiles table not yet configured — fall through
+  }
+  // Fallback: use the role that was stored in user_metadata at signup
+  if (metadataRole === 'hr') return 'hr';
+  return 'applicant';
+};
+
+const mapSupabaseUser = async (user: any): Promise<User> => {
+  const metadataRole = user.user_metadata?.role as string | undefined;
+  const role = await fetchUserRole(user.id, metadataRole);
   return {
     id: user.id,
     email: user.email || '',
     full_name: user.user_metadata?.full_name || '',
-    role: user.user_metadata?.role || 'applicant',
+    role,
     created_at: user.created_at,
   };
 };
@@ -20,17 +47,15 @@ export const authService = {
     });
 
     if (error) {
-      console.error("Login attempt failed:", error.message);
+      console.error('Login attempt failed:', error.message);
       throw error;
     }
-    
-    const user = mapSupabaseUser(data.user);
 
-    // Mimic the old response structure
+    const user = await mapSupabaseUser(data.user);
     return { user, token: data.session?.access_token };
   },
 
-  // Register new applicant
+  // Register new user (applicant or hr)
   register: async (userData: RegisterDTO) => {
     const { data, error } = await supabase.auth.signUp({
       email: userData.email,
@@ -38,35 +63,31 @@ export const authService = {
       options: {
         data: {
           full_name: userData.full_name,
-          role: 'applicant', // Default role
+          role: userData.role || 'applicant',
         },
       },
     });
 
     if (error) throw error;
-
-    // If email confirmation is enabled, user might be null or session null
     if (!data.user) throw new Error('Registration failed');
 
-    const user = mapSupabaseUser(data.user);
+    const user = await mapSupabaseUser(data.user);
     return { user, token: data.session?.access_token };
   },
 
-  // Get current user
+  // Get current authenticated user (always fetches fresh role)
   getCurrentUser: async (): Promise<User> => {
     const { data: { user }, error } = await supabase.auth.getUser();
     if (error || !user) throw error || new Error('No user found');
-    return mapSupabaseUser(user);
+    return await mapSupabaseUser(user);
   },
 
   // Logout
   logout: async () => {
     await supabase.auth.signOut();
-    sessionStorage.removeItem('token'); // Keep cleaning up just in case
-    sessionStorage.removeItem('user');
   },
 
-  // Get token (Supabase handles this internally, but for compatibility)
+  // Get current session token
   getToken: async (): Promise<string | null> => {
     const { data } = await supabase.auth.getSession();
     return data.session?.access_token || null;
@@ -77,9 +98,9 @@ export const authService = {
     const { data } = await supabase.auth.getSession();
     return !!data.session;
   },
-  
+
   // Update profile
-  updateProfile: async (data: { full_name?: string; email?: string; password?: string, current_password?: string }) => {
+  updateProfile: async (data: { full_name?: string; email?: string; password?: string; current_password?: string }) => {
     const updates: any = {};
     if (data.email) updates.email = data.email;
     if (data.password) updates.password = data.password;
@@ -90,6 +111,8 @@ export const authService = {
     if (error) throw error;
     if (!user) throw new Error('Update failed');
 
-    return { user: mapSupabaseUser(user), token: (await supabase.auth.getSession()).data.session?.access_token };
+    const mappedUser = await mapSupabaseUser(user);
+    const { data: sessionData } = await supabase.auth.getSession();
+    return { user: mappedUser, token: sessionData.session?.access_token };
   },
 };

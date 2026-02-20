@@ -12,9 +12,18 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireHR = f
 
   if (isLoading) {
     return (
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>Loading...</p>
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'var(--bg-primary)',
+        zIndex: 9999,
+      }}>
+        <div className="spinner" />
+        <p style={{ marginTop: '1rem', color: 'var(--text-muted)', fontWeight: 500 }}>Loading...</p>
       </div>
     );
   }

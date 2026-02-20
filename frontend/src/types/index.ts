@@ -69,6 +69,7 @@ export interface RegisterDTO {
   email: string;
   password: string;
   full_name: string;
+  role?: 'applicant' | 'hr';
 }
 
 export interface CreateJobDTO {
