@@ -1,23 +1,15 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { initDatabase } from './config/database';
 import { errorHandler } from './utils/errors';
-import db from './config/database';
-
-// Import routes
-import authRoutes from './routes/auth.routes';
-import jobsRoutes from './routes/jobs.routes';
-import applicationsRoutes from './routes/applications.routes';
-import hrRoutes from './routes/hr.routes';
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5147;
+const PORT = process.env.PORT || 5001;
 
-// Middleware
+// CORS
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5173',
@@ -27,10 +19,7 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
-    // Check if origin is allowed or is a Vercel preview deployment
     if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
       callback(null, true);
     } else {
@@ -40,60 +29,46 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
-// Express 5: Explicitly set extended to true (default is now false)
 app.use(express.urlencoded({ extended: true }));
-
-// Serve uploaded files statically
-const uploadDir = process.env.UPLOAD_DIR || './uploads';
-app.use('/uploads', express.static(uploadDir));
 
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// Gemini AI test endpoint
-app.get('/api/test/gemini', async (req, res) => {
+// OpenRouter AI test endpoint
+app.get('/api/test/openrouter', async (req, res) => {
   try {
-    const { geminiClient, geminiModel } = await import('./config/gemini');
-    
-    if (!geminiClient) {
-      return res.status(500).json({ 
-        error: 'Gemini client not initialized',
-        message: 'Please set GEMINI_API_KEY in your .env file'
-      });
+    const { openrouterClient, openrouterModel } = await import('./config/openrouter');
+    if (!openrouterClient) {
+      return res.status(500).json({ error: 'OpenRouter client not initialized' });
     }
-
-    const testPrompt = 'Say "Gemini AI is working!" in a friendly way.';
-    
-    const model = geminiClient.getGenerativeModel({ model: geminiModel });
-    const result = await model.generateContent(testPrompt);
-    const response = await result.response;
-    const text = response.text();
-
-    res.json({
-      success: true,
-      message: 'Gemini AI connection successful!',
-      model: geminiModel,
-      prompt: testPrompt,
-      response: text,
+    const result = await openrouterClient.chat.completions.create({
+      model: openrouterModel,
+      messages: [{ role: 'user', content: 'Say "OpenRouter AI is working!" in a friendly way.' }],
     });
+    const text = result.choices[0].message.content;
+    res.json({ success: true, response: text });
   } catch (error: any) {
-    console.error('Gemini test error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Gemini test failed',
-      message: error?.message || 'Unknown error',
-      details: process.env.NODE_ENV === 'development' ? error?.stack : undefined,
-    });
+    res.status(500).json({ success: false, error: error?.message });
   }
 });
 
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/jobs', jobsRoutes);
-app.use('/api/applications', applicationsRoutes);
-app.use('/api/hr', hrRoutes);
+// AI Evaluation trigger — called by frontend after submitting application to Supabase
+app.post('/api/queue/evaluate/:id', async (req, res) => {
+  try {
+    const applicationId = parseInt(req.params.id);
+    if (isNaN(applicationId)) {
+      return res.status(400).json({ error: 'Invalid application ID' });
+    }
+    const { evaluationQueue } = await import('./services/queue.service');
+    await evaluationQueue.add(applicationId);
+    res.json({ success: true, message: `Application ${applicationId} added to evaluation queue` });
+  } catch (error: any) {
+    console.error('Queue trigger error:', error);
+    res.status(500).json({ error: 'Failed to queue evaluation' });
+  }
+});
 
 // 404 handler
 app.use((req, res) => {
@@ -103,69 +78,26 @@ app.use((req, res) => {
 // Error handler
 app.use(errorHandler);
 
-// Initialize database and start server
-// Express 5: app.listen now passes errors to callback
-async function startServer() {
-  let server: any = null;
-
-  const gracefulShutdown = async (signal: string) => {
-    console.log(`\n${signal} signal received: starting graceful shutdown...`);
-
-    if (server) {
-      server.close(() => {
-        console.log('HTTP server closed');
-      });
-
-      // Force close server after 10 seconds
-      setTimeout(() => {
-        console.error('Could not close connections in time, forcefully shutting down');
-        process.exit(1);
-      }, 10000);
-    }
-
-    // Close database connection
-    try {
-      db.close((err) => {
-        if (err) {
-          console.error('Error closing database:', err);
-          process.exit(1);
-        } else {
-          console.log('Database connection closed');
-          console.log('Graceful shutdown completed');
-          process.exit(0);
-        }
-      });
-    } catch (error) {
-      console.error('Error during database shutdown:', error);
-      process.exit(1);
-    }
-  };
-
-  // Handle shutdown signals
-  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-
-  try {
-    await initDatabase();
-    
-    server = app.listen(PORT, (error?: Error) => {
-      if (error) {
-        console.error('Failed to start server:', error);
-        process.exit(1);
-      }
-      console.log(`
+// Start server
+const server = app.listen(PORT, () => {
+  console.log(`
 🚀 Server is running!
 📡 Port: ${PORT}
 🌍 Environment: ${process.env.NODE_ENV || 'development'}
 📝 API: http://localhost:${PORT}/api
-      `);
-    });
-  } catch (error) {
-    console.error('Failed to initialize database:', error);
-    process.exit(1);
-  }
-}
+  `);
+});
 
-startServer();
+// Graceful shutdown
+const gracefulShutdown = (signal: string) => {
+  console.log(`\n${signal} received: shutting down...`);
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 export default app;

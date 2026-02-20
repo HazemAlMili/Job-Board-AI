@@ -1,87 +1,71 @@
 import { ApplicationModel } from '../models/application.model';
 import { JobModel } from '../models/job.model';
-import { GeminiService } from './gemini.service';
-import { aiScoreThreshold } from '../config/gemini';
+import { OpenRouterService } from './openrouter.service';
+
+const AI_SCORE_THRESHOLD = parseInt(process.env.AI_SCORE_THRESHOLD || '5', 10);
 
 /**
- * Simple in-memory queue for processing resume evaluations
+ * In-memory queue for processing resume AI evaluations
  */
 class EvaluationQueue {
   private processing = false;
-  private queue: number[] = []; // application IDs
+  private queue: number[] = [];
 
-  /**
-   * Add application to evaluation queue
-   */
   async add(applicationId: number): Promise<void> {
     this.queue.push(applicationId);
-    console.log(`Application ${applicationId} added to queue. Queue size: ${this.queue.length}`);
-
-    // Start processing if not already running
+    console.log(`📥 Application ${applicationId} queued. Queue size: ${this.queue.length}`);
     if (!this.processing) {
       this.processQueue();
     }
   }
 
-  /**
-   * Process all applications in the queue
-   */
   private async processQueue(): Promise<void> {
     this.processing = true;
-    console.log('Starting queue processing...');
-
     while (this.queue.length > 0) {
       const applicationId = this.queue.shift();
       if (applicationId) {
         await this.evaluateApplication(applicationId);
       }
     }
-
     this.processing = false;
-    console.log('Queue processing completed');
   }
 
-  /**
-   * Evaluate a single application
-   */
   private async evaluateApplication(applicationId: number): Promise<void> {
     try {
-      console.log(`Evaluating application ${applicationId}...`);
+      console.log(`🤖 Starting evaluation for application ${applicationId}...`);
 
-      // Update status to evaluating
+      // Mark as evaluating
       await ApplicationModel.updateStatus(applicationId, 'evaluating');
+      console.log(`- Status updated to evaluating for ${applicationId}`);
 
-      // Get application and job details
       const application = await ApplicationModel.findById(applicationId);
       if (!application) {
-        console.error(`Application ${applicationId} not found`);
+        console.error(`- Error: Application ${applicationId} not found in DB`);
         return;
       }
+      console.log(`- Found application for ${application.full_name}`);
 
       const job = await JobModel.findById(application.job_id);
       if (!job) {
-        console.error(`Job ${application.job_id} not found for application ${applicationId}`);
-        await ApplicationModel.updateStatus(applicationId, 'rejected');
+        console.error(`- Error: Job ${application.job_id} not found for app ${applicationId}`);
+        await ApplicationModel.updateEvaluation(
+          applicationId,
+          0,
+          'The job listing for this application could not be found.',
+          'rejected'
+        );
         return;
       }
+      console.log(`- Found job: ${job.title}`);
 
-      // Evaluate resume using the local file path
-      if (!application.resume_path) {
-        throw new Error(`Application ${applicationId} has no resume file`);
-      }
+      // resume_path is now a Supabase Storage public URL
+      const evaluation = await OpenRouterService.evaluateResume(application.resume_path, job);
 
-      console.log(`Evaluating resume: ${application.resume_path}`);
-      const evaluation = await GeminiService.evaluateResume(application.resume_path, job);
+      // Score < threshold → auto-reject with feedback
+      // Score >= threshold → under_review by HR with feedback
+      const newStatus: 'rejected' | 'under_review' =
+        evaluation.score < AI_SCORE_THRESHOLD ? 'rejected' : 'under_review';
 
-
-
-      // Determine status based on score and threshold
-      let newStatus: 'rejected' | 'under_review' = 'under_review';
-      if (evaluation.score < aiScoreThreshold) {
-        newStatus = 'rejected';
-      }
-
-      // Update application with evaluation results
       await ApplicationModel.updateEvaluation(
         applicationId,
         evaluation.score,
@@ -90,35 +74,26 @@ class EvaluationQueue {
       );
 
       console.log(
-        `Application ${applicationId} evaluated: Score ${evaluation.score}/10 - Status: ${newStatus}`
+        `✅ Application ${applicationId} evaluated: Score ${evaluation.score}/10 → ${newStatus}`
       );
     } catch (error) {
-      console.error(`Error evaluating application ${applicationId}:`, error);
-
-      // Update to rejected on error
+      console.error(`❌ Error evaluating application ${applicationId}:`, error);
       await ApplicationModel.updateEvaluation(
         applicationId,
         0,
-        'An error occurred during evaluation. Please contact support.',
+        'An error occurred during AI evaluation. Our team has been notified.',
         'rejected'
       );
     }
   }
 
-  /**
-   * Get current queue size
-   */
   getQueueSize(): number {
     return this.queue.length;
   }
 
-  /**
-   * Check if queue is processing
-   */
   isProcessing(): boolean {
     return this.processing;
   }
 }
 
-// Export singleton instance
 export const evaluationQueue = new EvaluationQueue();

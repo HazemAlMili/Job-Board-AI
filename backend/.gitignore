@@ -1,0 +1,85 @@
+# ========================
+# Dependencies
+# ========================
+node_modules/
+.pnpm-store/
+
+# ========================
+# Environment Variables (NEVER commit these!)
+# ========================
+.env
+.env.local
+.env.development
+.env.production
+.env.*.local
+
+# ========================
+# Build Output
+# ========================
+dist/
+build/
+out/
+
+# ========================
+# Database Files (old SQLite)
+# ========================
+*.sqlite
+*.sqlite3
+*.db
+database.sqlite
+
+# ========================
+# Uploaded Files
+# ========================
+uploads/
+resumes/
+
+# ========================
+# Logs
+# ========================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ========================
+# Runtime / Temp
+# ========================
+tmp/
+temp/
+.tmp/
+*.tmp
+
+# ========================
+# OS Files
+# ========================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ========================
+# IDE / Editor
+# ========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ========================
+# TypeScript
+# ========================
+*.tsbuildinfo
+
+# ========================
+# Coverage / Testing
+# ========================
+coverage/
+.nyc_output/
