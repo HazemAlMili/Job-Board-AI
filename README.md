@@ -1,36 +1,35 @@
-# Job Board AI: Next-Gen Edition ✨
+# Hireny AI ✨
 
-An AI-powered job board with automated resume evaluation using **Gemini 2.5 Flash**, now refactored with a premium **Next-Gen UI** featuring Glassmorphism, Bento Grid layouts, and cinematic animations.
+An AI-powered job board featuring automated resume evaluation via **OpenRouter (Gemini 2.0 Flash)**, built with a premium **Next-Gen UI** featuring Glassmorphism, Bento Grid layouts, and cinematic animations. Refactored to a modern cloud-native stack with **Supabase**.
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js 18+
-- npm or yarn
-- Gemini API Key ([Get one here](https://makersuite.google.com/app/apikey))
+- [Supabase Project](https://supabase.com/)
+- [OpenRouter API Key](https://openrouter.ai/keys)
 
 ### Backend Setup
 ```bash
 cd backend
 npm install
-cp .env.example .env
-# Edit .env and add your GEMINI_API_KEY
-npm run seed
+# Edit .env with SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, and OPENROUTER_API_KEY
 npm run dev
 ```
-Backend runs at: http://localhost:5001
+Backend runs at: http://localhost:5001 (Handles AI Evaluation Queue)
 
 ### Frontend Setup
 ```bash
 cd frontend
 npm install
+# Edit .env with VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, and VITE_API_URL
 npm run dev
 ```
-Frontend runs at: http://localhost:5174 (or 5173)
+Frontend runs at: http://localhost:5173
 
 ## 🎨 Next-Gen UI Features
 
-The application has been completely refactored with the **Aura Design System**:
+The application uses the **Aura Design System**:
 
 - **Bento Grid Layout**: Dynamic and responsive grid system for HR Dashboard and Job Listings.
 - **Glassmorphism**: Premium "frosted glass" effects with deep backdrop blurs and semi-transparent surfaces.
@@ -44,40 +43,33 @@ The application has been completely refactored with the **Aura Design System**:
 
 ### For Applicants
 - 🔍 **Browse Jobs**: Advanced search and filters with Bento Grid layout.
-- 📝 **Apply**: Submit applications with PDF/Docx resume upload.
-- 🤖 **AI Match Score**: Instant resume evaluation with a match score badge.
+- 📝 **Apply**: Submit applications with PDF/Docx resume upload directly to Supabase Storage.
+- 🤖 **AI Match Score**: Instant resume evaluation with a match score badge powered by OpenRouter.
 - 📊 **Track Status**: Real-time updates on application progress.
-- ⭐ **AI Feedback**: Detailed feedback from Gemini on how to improve.
+- ⭐ **AI Feedback**: Detailed feedback from Gemini on how to improve your match.
 
 ### For HR
 - 📊 **Bento Dashboard**: Interactive statistics with glassmorphism cards.
 - 💼 **Job Management**: Create, edit, and manage job postings.
 - 👥 **Candidate Review**: Staggered list of applications with AI scores.
-- 📄 **Resume Preview**: One-click download of applicant resumes.
+- 📄 **Resume Preview**: Direct access to resumes stored in the cloud.
 - ✅ **Quick Actions**: Accept or reject applications with glass buttons.
 
 ## 🛠️ Tech Stack
 
 ### Frontend
 - **Framework**: React 18 + TypeScript
+- **State/Auth**: Supabase Client SDK
 - **Styling**: Tailwind CSS + Custom Aura Design System
 - **Animations**: Framer Motion
 - **Icons**: Lucide React
 - **Build Tool**: Vite
 
-### Backend
+### Backend (Queue Processor)
 - **Runtime**: Node.js + Express 5
-- **Language**: TypeScript
-- **Database**: SQLite (Production-ready for Vercel)
-- **AI Engine**: Google Gemini 2.5 Flash
-- **Auth**: JWT + Bcrypt
-
-## 🔐 Demo Credentials
-
-| Role | Email | Password |
-|------|-------|----------|
-| **HR Manager** | `hr@jobboard.com` | `12345678` |
-| **Applicant** | `john.doe@example.com` | `password123` |
+- **AI Engine**: OpenRouter (Gemini 2.0 Flash)
+- **Platform**: Supabase (PostgreSQL, Auth, Storage)
+- **File Parsing**: Mammoth (Docx) & PDF-Parse
 
 ## 🏗️ Project Structure
 
@@ -87,48 +79,32 @@ job-board-ai/
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── ui/       # GlassCard, Bento components
-│   │   │   ├── GeminiFeedback.tsx
+│   │   │   ├── AIFeedback.tsx
 │   │   │   └── LoadingAI.tsx
 │   │   ├── pages/        # Applicant & HR pages
-│   │   └── lib/          # Tailwind utilities (cn utility)
-│   ├── tailwind.config.js
-│   └── postcss.config.js
-├── backend/              # Express + TypeScript API
+│   │   ├── services/     # Direct Supabase interaction
+│   │   └── lib/          # Supabase client & utilities
+├── backend/              # AI Queue API
 │   ├── src/
-│   │   ├── config/       # Gemini & DB configuration
-│   │   ├── controllers/  # Auth & Job logic
-│   │   └── models/       # SQLite schemas
-│   └── uploads/          # Resume storage
-├── vercel.json           # Monorepo deployment config
+│   │   ├── config/       # OpenRouter & Supabase Admin config
+│   │   ├── services/     # AI Evaluation logic & Queue
+│   │   ├── models/       # Supabase database models
+│   │   └── server.ts     # Minimal API & Webhook entry
 └── ...
 ```
 
-## 🚀 Deployment
-
-The project is optimized for deployment on **Vercel**.
-
-1. **GitHub**: Push your code to a GitHub repository.
-2. **Import**: Import the repo into Vercel.
-3. **Env Vars**: Add `JWT_SECRET` and `GEMINI_API_KEY`.
-4. **Deploy**: Vercel will automatically handle the monorepo build using the provided `vercel.json`.
-
-For detailed instructions, see:
-- 📖 [QUICK-START.md](./QUICK-START.md)
-- 📋 [DEPLOYMENT-CHECKLIST.md](./DEPLOYMENT-CHECKLIST.md)
-- 🌐 [VERCEL-DEPLOYMENT.md](./VERCEL-DEPLOYMENT.md)
-
-## 🎯 AI Evaluation Logic
+## 🎯 AI Evaluation Flow
 
 When an applicant submits a resume:
-1. Physical file is handled by **Multer**.
-2. Text is extracted from PDF/Docx.
-3. Sent to **Gemini AI** with a custom system prompt.
-4. AI generates a **Match Score (1-10)** and feedback.
-5. Applicants with **Score < 5** are automatically filtered for HR efficiency.
+1. **Frontend**: Uploads file to **Supabase Storage** and record to **Database**.
+2. **Trigger**: Frontend calls the Backend evaluation endpoint `/api/queue/evaluate/:id`.
+3. **Queue**: Backend downloads the resume, extracts text, and sends it to **OpenRouter**.
+4. **AI Analysis**: Gemini analyzes the resume against the job description.
+5. **Results**: AI generates a **Match Score (1-10)** and feedback, which is saved back to Supabase.
+6. **Automation**: Applicants with **Score < 5** are automatically moved to "Rejected" for HR efficiency.
 
 ## 📄 License
 MIT
 
 ---
-Built with ❤️ using React, Tailwind, and Gemini
-
+Built with ❤️ using React, Tailwind, Supabase, and OpenRouter
