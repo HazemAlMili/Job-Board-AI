@@ -106,15 +106,15 @@ const AllApplications: React.FC = () => {
             <tbody>
               {sortedApplications.map((app) => (
                 <tr key={app.id} onClick={() => navigate(`/hr/applications/${app.id}`)}>
-                  <td>
+                  <td data-label="Applicant">
                     <div className="applicant-cell">
                       <strong>{app.full_name}</strong>
                       <small>{app.email}</small>
                     </div>
                   </td>
-                  <td>{app.job_title}</td>
-                  <td>{app.job_location}</td>
-                  <td>
+                  <td data-label="Job">{app.job_title}</td>
+                  <td data-label="Location">{app.job_location}</td>
+                  <td data-label="AI Score">
                     {app.ai_score !== null ? (
                       <span className={`score-badge ${app.ai_score >= 7 ? 'high' : app.ai_score >= 5 ? 'medium' : 'low'}`}>
                         {app.ai_score}/10
@@ -123,11 +123,11 @@ const AllApplications: React.FC = () => {
                       <span className="text-muted">-</span>
                     )}
                   </td>
-                  <td>
+                  <td data-label="Status">
                     <StatusBadge status={app.status} />
                   </td>
-                  <td>{new Date(app.created_at).toLocaleDateString()}</td>
-                  <td>
+                  <td data-label="Applied">{new Date(app.created_at).toLocaleDateString()}</td>
+                  <td data-label="Action">
                     <button className="btn-link">View →</button>
                   </td>
                 </tr>

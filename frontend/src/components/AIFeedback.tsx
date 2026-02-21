@@ -10,12 +10,7 @@ interface AIFeedbackProps {
   isLoading?: boolean;
 }
 
-const getScoreColor = (score: number) => {
-  if (score >= 8) return 'success';
-  if (score >= 6) return 'cyan';
-  if (score >= 4) return 'violet';
-  return 'danger';
-};
+
 
 const getScoreGradient = (score: number) => {
   if (score >= 8) return 'from-green-500 to-emerald-500';
@@ -64,19 +59,17 @@ const AIFeedback: React.FC<AIFeedbackProps> = ({ score, feedback, isLoading = fa
     return null;
   }
 
-  const scoreColor = getScoreColor(score);
   const scoreGradient = getScoreGradient(score);
   const ScoreIcon = getScoreIcon(score);
 
   return (
     <GlassCard 
-      className="p-6 relative overflow-hidden group" 
-      glow 
-      glowColor={scoreColor}
+      className="p-6 relative overflow-hidden" 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
+      <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${scoreGradient} opacity-5`} />
       {/* Scanning laser animation */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -94,7 +87,7 @@ const AIFeedback: React.FC<AIFeedbackProps> = ({ score, feedback, isLoading = fa
         />
       </div>
 
-      <div className="flex items-start gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
         {/* Score Badge */}
         <motion.div
           className={cn(

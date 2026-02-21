@@ -19,7 +19,7 @@ const glowColors = {
 };
 
 const GlassCard = React.forwardRef<HTMLDivElement, GlassCardProps>(
-  ({ children, className, glow = false, glowColor = 'violet', hover = true, ...props }, ref) => {
+  ({ children, className, glow = false, glowColor = 'violet', hover = false, ...props }, ref) => {
     return (
       <motion.div
         ref={ref}

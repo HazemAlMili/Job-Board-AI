@@ -265,58 +265,63 @@ const Dashboard: React.FC = () => {
             {recentApplications.map((app) => (
               <motion.div key={app.id} variants={itemVariants}>
                 <GlassCard 
-                  className="p-6 cursor-pointer group"
+                  className="p-6 cursor-pointer"
                   onClick={() => navigate(`/hr/applications/${app.id}`)}
-                  hover
                 >
-                  <div className="flex items-center justify-between gap-4">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     {/* Applicant Info */}
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-text-primary mb-1 group-hover:text-primary-violet transition-colors">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-semibold text-text-primary mb-1 transition-colors truncate">
                         {app.full_name}
                       </h3>
-                      <p className="text-text-secondary text-sm">{app.job_title}</p>
+                      <p className="text-text-secondary text-sm truncate">{app.job_title}</p>
                     </div>
 
-                    {/* AI Score Badge */}
-                    <div className="flex items-center gap-4">
-                      {app.ai_score !== null ? (
-                        <div className="relative">
-                          <div className={`
-                            w-16 h-16 rounded-xl flex flex-col items-center justify-center
-                            bg-gradient-to-br shadow-lg
-                            ${app.ai_score >= 7 ? 'from-green-500 to-emerald-500' : 
-                              app.ai_score >= 5 ? 'from-cyan-500 to-blue-500' : 
-                              'from-red-500 to-orange-500'}
-                          `}>
-                            <span className="text-2xl font-bold text-white">{app.ai_score}</span>
-                            <span className="text-xs text-white/80">/10</span>
+                    {/* Meta elements */}
+                    <div className="flex items-center justify-between w-full lg:w-auto pt-4 lg:pt-0 mt-3 lg:mt-0 border-t border-white/5 lg:border-0 gap-4">
+                      
+                      <div className="flex items-center gap-4">
+                        {/* AI Score Badge */}
+                        <div className="shrink-0">
+                          {app.ai_score !== null ? (
+                            <div className={`
+                              w-16 h-16 rounded-xl flex flex-col items-center justify-center
+                              bg-gradient-to-br shadow-lg
+                              ${app.ai_score >= 7 ? 'from-green-500 to-emerald-500' : 
+                                app.ai_score >= 5 ? 'from-cyan-500 to-blue-500' : 
+                                'from-red-500 to-orange-500'}
+                            `}>
+                              <span className="text-2xl font-bold text-white leading-none">{app.ai_score}</span>
+                              <span className="text-xs text-white/80 mt-1">/10</span>
+                            </div>
+                          ) : (
+                            <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-surface border border-border">
+                              <span className="text-text-muted text-sm">N/A</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Status & Date Stack */}
+                        <div className="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-4 shrink-0">
+                          {/* Status */}
+                          <div>
+                            <StatusBadge status={app.status} />
+                          </div>
+
+                          {/* Date */}
+                          <div className="flex items-center gap-2 text-text-secondary text-sm">
+                            <Calendar className="w-4 h-4" />
+                            <span>{new Date(app.created_at).toLocaleDateString()}</span>
                           </div>
                         </div>
-                      ) : (
-                        <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-surface border border-border">
-                          <span className="text-text-muted text-sm">N/A</span>
-                        </div>
-                      )}
-
-                      {/* Status */}
-                      <div className="min-w-[120px]">
-                        <StatusBadge status={app.status} />
-                      </div>
-
-                      {/* Date */}
-                      <div className="flex items-center gap-2 text-text-secondary min-w-[140px]">
-                        <Calendar className="w-4 h-4" />
-                        <span className="text-sm">{new Date(app.created_at).toLocaleDateString()}</span>
                       </div>
 
                       {/* View Arrow */}
                       <motion.div
-                        className="text-primary-violet"
-                        whileHover={{ x: 5 }}
+                        className="text-primary-violet shrink-0 pl-2 lg:pl-0"
                         transition={{ duration: 0.2 }}
                       >
-                        <Eye className="w-5 h-5" />
+                        <Eye className="w-5 h-5 lg:w-6 lg:h-6" />
                       </motion.div>
                     </div>
                   </div>

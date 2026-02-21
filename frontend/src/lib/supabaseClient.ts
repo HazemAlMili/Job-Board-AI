@@ -15,6 +15,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // though requests will still fail with a 401/403 or "No apikey" error.
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder-key'
+  supabaseAnonKey || 'placeholder-key',
+  {
+    auth: {
+      storage: window.sessionStorage,
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true
+    }
+  }
 );
 

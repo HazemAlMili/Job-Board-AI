@@ -147,8 +147,8 @@ const ApplicationDetails: React.FC = () => {
           <div className="resume-download">
             <span className="file-icon">📄</span>
             <div className="file-details">
-              <p className="file-name">Resume</p>
-              <p className="file-info">Uploaded on {new Date(application.created_at).toLocaleDateString()}</p>
+              <p className="resume-name">Resume</p>
+              <p className="resume-info">Uploaded on {new Date(application.created_at).toLocaleDateString()}</p>
             </div>
             <a
               href={application.resume_path}

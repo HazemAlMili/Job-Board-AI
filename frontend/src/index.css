@@ -88,6 +88,10 @@
   background: var(--primary);
 }
 
+html {
+  font-size: clamp(14px, 1.5vw, 16px);
+}
+
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
   background: var(--bg-primary);
@@ -391,6 +395,8 @@ body {
   color: var(--text-secondary);
   padding: 0.5rem 1rem;
   border: 1px solid var(--border);
+  margin-bottom: 2rem;
+  display: inline-block;
 }
 
 .btn-back:hover {
@@ -1050,5 +1056,11 @@ body {
 @media (max-width: 768px) {
   .jobs-hero h1 {
     font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
   }
 }
