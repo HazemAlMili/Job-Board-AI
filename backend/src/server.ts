@@ -62,8 +62,13 @@ app.post('/api/queue/evaluate/:id', async (req, res) => {
       return res.status(400).json({ error: 'Invalid application ID' });
     }
     const { evaluationQueue } = await import('./services/queue.service');
-    await evaluationQueue.add(applicationId);
-    res.json({ success: true, message: `Application ${applicationId} added to evaluation queue` });
+    if (process.env.VERCEL) {
+      // In serverless, we must await the evaluation since background tasks are killed
+      await evaluationQueue.evaluateApplication(applicationId);
+    } else {
+      await evaluationQueue.add(applicationId);
+    }
+    res.json({ success: true, message: `Application ${applicationId} evaluation triggered` });
   } catch (error: any) {
     console.error('Queue trigger error:', error);
     res.status(500).json({ error: 'Failed to queue evaluation' });
@@ -78,26 +83,28 @@ app.use((req, res) => {
 // Error handler
 app.use(errorHandler);
 
-// Start server
-const server = app.listen(PORT, () => {
-  console.log(`
+// Start server only if not in a Vercel serverless environment
+if (!process.env.VERCEL) {
+  const server = app.listen(PORT, () => {
+    console.log(`
 🚀 Server is running!
 📡 Port: ${PORT}
 🌍 Environment: ${process.env.NODE_ENV || 'development'}
 📝 API: http://localhost:${PORT}/api
-  `);
-});
-
-// Graceful shutdown
-const gracefulShutdown = (signal: string) => {
-  console.log(`\n${signal} received: shutting down...`);
-  server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
+    `);
   });
-};
 
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+  // Graceful shutdown
+  const gracefulShutdown = (signal: string) => {
+    console.log(`\n${signal} received: shutting down...`);
+    server.close(() => {
+      console.log('Server closed');
+      process.exit(0);
+    });
+  };
+
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+}
 
 export default app;

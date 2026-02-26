@@ -30,7 +30,7 @@ class EvaluationQueue {
     this.processing = false;
   }
 
-  private async evaluateApplication(applicationId: number): Promise<void> {
+  async evaluateApplication(applicationId: number): Promise<void> {
     try {
       console.log(`🤖 Starting evaluation for application ${applicationId}...`);
 
