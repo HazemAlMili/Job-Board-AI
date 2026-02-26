@@ -75,6 +75,11 @@ app.post('/api/queue/evaluate/:id', async (req, res) => {
   }
 });
 
+// Root endpoint to prevent 404 on base URL
+app.get('/', (req, res) => {
+  res.json({ message: 'Welcome to the Job Board AI Auto-Evaluation API', status: 'online' });
+});
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
